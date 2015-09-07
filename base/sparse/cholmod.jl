@@ -87,22 +87,22 @@ function __init__()
             tmp = Array(Cint, 3)
             ccall((:cholmod_version, :libcholmod), Cint, (Ptr{Cint},), version_array)
             ccall((:jl_cholmod_version, :libsuitesparse_wrapper), Cint, (Ptr{Cint},), tmp)
-            if tmp != version_array
+            if tmp[1] != version_array[1]
                 warn("""
 
                      CHOLMOD version incompatibility
 
                      Julia was compiled with CHOLMOD version $version. It
-                     is currently linked with a version older than
-                     $(VersionNumber(tmp...)). This might cause Julia to
-                     terminate when working with sparse matrix
-                     factorizations, e.g. solving systems of equations
-                     with \\.
+                     is currently linked with version $(VersionNumber(tmp...)).
+                     This might cause Julia to terminate when working with
+                     sparse matrix factorizations, e.g. solving systems of
+                     equations with \\.
 
-                     It is recommended that you use Julia with a recent
-                     version of CHOLMOD, or download the OS X or generic
-                     Linux binary from www.julialang.org, which ship with
-                     the correct versions of all dependencies.
+                     It is recommended that you use Julia with the same major
+                     version of CHOLMOD as the one used during the build, or
+                     download the OS X or generic Linux binary
+                     from www.julialang.org, which ship with the correct
+                     versions of all dependencies.
                 """)
             end
         end
