@@ -97,7 +97,17 @@ end
 
 function doc(b::Binding)
     d = invoke(doc, Tuple{Any}, b)
-    d == nothing ? doc(getfield(b.mod, b.var)) : d
+    if d == nothing
+        v = getfield(b.mod,b.var)
+        d = doc(v)
+        if d == nothing
+            # check to see if the binding var is not a macro
+            if !startswith(string(b.var),'@')
+                d = typesummary(typeof(v))
+            end
+        end
+    end
+    return d
 end
 
 # Function / Method support

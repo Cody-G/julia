@@ -116,6 +116,13 @@ import .Inner.@m
 "Inner.@m"
 :@m
 
+type Foo
+    x
+end
+
+# value with no docs
+const val = Foo(1.0)
+
 end
 
 import Base.Docs: meta
@@ -207,6 +214,13 @@ end
 let fields = meta(DocsTest)[DocsTest.FieldDocs].fields
     @test haskey(fields, :one) && fields[:one] == doc"one"
     @test haskey(fields, :two) && fields[:two] == doc"two"
+end
+
+# test that when no docs exist, they fallback to
+# the docs for the typeof(value)
+let d1 = @doc(DocsTest.val)
+    d2 = @doc(DocsTest.Foo)
+    @test docstrings_equal(d1,d2)
 end
 
 # Issue #12700.
