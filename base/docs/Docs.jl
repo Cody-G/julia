@@ -95,14 +95,44 @@ function doc(obj)
     end
 end
 
+function macrosummary(name::Symbol, func::Function)
+    parts = ["""
+
+    No documentation found.
+    """]
+    if isdefined(func,:code) && func.code != nothing
+        lam = Base.uncompressed_ast(func.code)
+        io  = IOBuffer()
+        write(io, name, '(')
+        nargs = length(lam.args[1])
+        for (i,arg) in enumerate(lam.args[1])
+            argname, argtype = arg.args
+            if argtype === :Any || argtype === :ANY
+                write(io, argname)
+            elseif isa(argtype,Expr) && argtype.head === :... &&
+                   (argtype.args[end] === :Any || argtype.args[end] === :ANY)
+                write(io, argname, "...")
+            else
+                write(io, argname, "::", argtype)
+            end
+            i < nargs && write(io, ',')
+        end
+        write(io, ')')
+        push!(parts, string("```julia\n", takebuf_string(io), "\n```"))
+    end
+    Markdown.parse(join(parts,'\n'))
+end
+
 function doc(b::Binding)
     d = invoke(doc, Tuple{Any}, b)
     if d == nothing
         v = getfield(b.mod,b.var)
         d = doc(v)
         if d == nothing
-            # check to see if the binding var is not a macro
-            if !startswith(string(b.var),'@')
+            # check to see if the binding var is a macro
+            if startswith(string(b.var),'@')
+                d = macrosummary(b.var, v)
+            else
                 d = typesummary(typeof(v))
             end
         end
